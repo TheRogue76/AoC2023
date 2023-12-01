@@ -55,7 +55,7 @@ struct Day01: AdventDay {
   func returnLowerIndicedValue(left: (String.Index, Int)?, right: (String.Index, Int)?) -> Int {
     if let left {
       if let right {
-        return left < right ? left.1 : right.1
+        return left.0 < right.0 ? left.1 : right.1
       } else {
         return left.1
       }
@@ -67,7 +67,7 @@ struct Day01: AdventDay {
   func returnHighestIndicedValue(left: (String.Index, Int)?, right: (String.Index, Int)?) -> Int {
     if let left {
       if let right {
-        return left > right ? left.1 : right.1
+        return left.0 > right.0 ? left.1 : right.1
       } else {
         return left.1
       }
@@ -77,26 +77,47 @@ struct Day01: AdventDay {
   }
 
   func findNumber(_ input: String) -> Int {
-    let stringDigitsInInput: [(String.Index, Int)] = Digit.allCases.compactMap { digit in
+    let stringDigitsInInputMovingForward: [(String.Index, Int)] = Digit.allCases.compactMap {
+      digit in
       guard let rangeOfDigit = input.range(of: digit.rawValue, options: .caseInsensitive) else {
         return nil
       }
       return (rangeOfDigit.lowerBound, digit.numericValue)
     }.sorted(by: { $0.0 < $1.0 })
 
-    let numberDigitsInInput: [(String.Index, Int)] = (0...10).compactMap { number in
-      guard let rangeOfDigit = input.range(of: String(number)) else {
+    let numberDigitsInInputMovingForward: [(String.Index, Int)] = (0...10).compactMap { number in
+      guard let rangeOfDigit = input.range(of: String(number), options: .caseInsensitive) else {
+        return nil
+      }
+      return (rangeOfDigit.lowerBound, number)
+    }.sorted(by: { $0.0 < $1.0 })
+
+    let stringDigitsInInputMovingBackward: [(String.Index, Int)] = Digit.allCases.compactMap {
+      digit in
+      guard
+        let rangeOfDigit = input.range(of: digit.rawValue, options: [.caseInsensitive, .backwards])
+      else {
+        return nil
+      }
+      return (rangeOfDigit.lowerBound, digit.numericValue)
+    }.sorted(by: { $0.0 < $1.0 })
+
+    let numberDigitsInInputMovingBackward: [(String.Index, Int)] = (0...10).compactMap { number in
+      guard
+        let rangeOfDigit = input.range(of: String(number), options: [.caseInsensitive, .backwards])
+      else {
         return nil
       }
       return (rangeOfDigit.lowerBound, number)
     }.sorted(by: { $0.0 < $1.0 })
 
     let decimalValue =
-      returnLowerIndicedValue(left: stringDigitsInInput.first, right: numberDigitsInInput.first)
+      returnLowerIndicedValue(
+        left: stringDigitsInInputMovingForward.first, right: numberDigitsInInputMovingForward.first)
       * 10
 
     let baseValue = returnHighestIndicedValue(
-      left: stringDigitsInInput.last, right: numberDigitsInInput.last)
+      left: stringDigitsInInputMovingBackward.last, right: numberDigitsInInputMovingBackward.last)
 
     return decimalValue + baseValue
   }
